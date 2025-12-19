@@ -368,12 +368,11 @@ export default function MobileProjectSpace() {
     setIsUploading(true);
     const formData = new FormData();
     formData.append('file', selectedFile);
-    formData.append('project_id', selectedProject.id.toString());
 
     try {
       console.log('📤 Uploading file:', selectedFile.name, 'to project:', selectedProject.id);
       
-      const response = await fetch(getApiUrl('/documents'), {
+      const response = await fetch(getApiUrl(`/projects/${selectedProject.id}/documents`), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

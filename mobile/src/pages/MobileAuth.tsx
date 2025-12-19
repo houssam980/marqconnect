@@ -134,9 +134,14 @@ export default function MobileAuth() {
                 placeholder="Email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onPaste={(e) => {
+                  e.preventDefault();
+                  const pastedText = e.clipboardData.getData('text');
+                  setEmail(pastedText.trim());
+                }}
                 className="mobile-input pl-12 w-full"
                 autoCapitalize="none"
-                autoComplete="email"
+                autoComplete="off"
                 required
               />
             </div>
@@ -151,8 +156,13 @@ export default function MobileAuth() {
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onPaste={(e) => {
+                  e.preventDefault();
+                  const pastedText = e.clipboardData.getData('text');
+                  setPassword(pastedText.trim());
+                }}
                 className="mobile-input pl-12 pr-12 w-full"
-                autoComplete="current-password"
+                autoComplete="off"
                 required
               />
               <button
