@@ -1,0 +1,28 @@
+# ============================================
+# QUICK CORS FIX FOR BROADCASTING/AUTH
+# ============================================
+
+# Step 1: Open this file and update it:
+# C:\wamp64\www\marqconnect_backend\config\cors.php
+
+# Find the 'paths' array and add 'broadcasting/auth':
+'paths' => [
+    'api/*', 
+    'broadcasting/auth',  # ← ADD THIS LINE
+    'sanctum/csrf-cookie'
+],
+
+# Step 2: Run these commands:
+cd C:\wamp64\www\marqconnect_backend
+php artisan config:clear
+php artisan cache:clear
+
+# Step 3: Restart WAMP Server
+
+# Step 4: Hard refresh browser (Ctrl+Shift+R)
+
+# ============================================
+# That's it! CORS error should be gone!
+# ============================================
+
+

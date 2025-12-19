@@ -1,0 +1,86 @@
+╔══════════════════════════════════════════════════════════╗
+║                                                          ║
+║   🔍 SIMPLE CHECK - Just Do These 3 Things 🔍            ║
+║                                                          ║
+╚══════════════════════════════════════════════════════════╝
+
+Your backend works! ✅ But tasks aren't being created...
+
+═══════════════════════════════════════════════════════════
+
+📋 DO THESE 3 SIMPLE CHECKS:
+
+═══════════════════════════════════════════════════════════
+
+CHECK #1: Open Network Tab
+═══════════════════════════════════════════════════════════
+
+1. Go to http://localhost:5173
+2. Press F12
+3. Click "Network" tab (at the top)
+4. Login and click "Espace"
+5. Type "Test Task" in the input
+6. Click the + button
+7. WATCH THE NETWORK TAB
+
+QUESTION: Do you see a new line appear that says "tasks"?
+
+[ ] YES, I see "POST tasks" appear
+[ ] NO, nothing happens in Network tab
+
+═══════════════════════════════════════════════════════════
+
+CHECK #2: Test in Console
+═══════════════════════════════════════════════════════════
+
+1. Press F12
+2. Click "Console" tab
+3. Paste this and press Enter:
+
+localStorage.getItem('token')
+
+QUESTION: What does it show?
+
+[ ] A long text string (like "1|abcd...")
+[ ] null
+
+═══════════════════════════════════════════════════════════
+
+CHECK #3: Can You See the Form?
+═══════════════════════════════════════════════════════════
+
+When you're on the "Espace" page:
+
+[ ] I can see "Task Board" heading
+[ ] I can see 3 columns (To Do, In Progress, Done)
+[ ] I can see an input box at the top
+[ ] I can see a + button
+[ ] I can TYPE in the input box
+[ ] I can CLICK the + button
+
+═══════════════════════════════════════════════════════════
+
+🎯 TELL ME YOUR ANSWERS:
+
+Check #1: Do you see "POST tasks" in Network tab? YES/NO
+Check #2: Does token show a string or null?
+Check #3: Can you see and click everything?
+
+═══════════════════════════════════════════════════════════
+
+💡 QUICK FIX TO TRY:
+
+1. Logout (if there's a logout button)
+2. Login again
+3. Go to "Espace"
+4. Try adding a task
+5. Does it work now?
+
+═══════════════════════════════════════════════════════════
+
+Read: CHECK_NETWORK_TAB.md for detailed instructions
+
+═══════════════════════════════════════════════════════════
+
+
+

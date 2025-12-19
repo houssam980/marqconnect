@@ -1,0 +1,27 @@
+# ============================================
+# LARAVEL BACKEND .ENV CONFIGURATION
+# ============================================
+# Copy these lines to your Laravel backend .env file
+# Location: C:\wamp64\www\marqconnect_backend\.env
+# ============================================
+
+# Broadcasting Configuration - Change from 'reverb' to 'pusher'
+BROADCAST_CONNECTION=pusher
+
+# Pusher Cloud Credentials
+# IMPORTANT: Do NOT set PUSHER_HOST or PUSHER_PORT - Pusher Cloud handles everything!
+PUSHER_APP_ID=2088769
+PUSHER_APP_KEY=d0db7eef206dad3d35ba
+PUSHER_APP_SECRET=c05907ceae48e1e63c79
+PUSHER_APP_CLUSTER=eu
+# Leave these empty - Pusher Cloud handles connection automatically
+PUSHER_HOST=
+PUSHER_PORT=
+PUSHER_SCHEME=https
+
+# ============================================
+# IMPORTANT: After updating .env file, run:
+# php artisan config:clear
+# php artisan cache:clear
+# ============================================
+

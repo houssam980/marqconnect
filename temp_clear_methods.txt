@@ -1,0 +1,54 @@
+
+    public function clearGeneral(Request $request)
+    {
+        try {
+            $user = $request->user();
+            
+            Log::info('Clearing general messages', [
+                'user_id' => $user->id,
+                'user_name' => $user->name
+            ]);
+            
+            DB::table('messages')->where('type', 'general')->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'All general messages cleared successfully'
+            ]);
+        } catch (Exception $e) {
+            Log::error('Error clearing general messages: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to clear messages'
+            ], 500);
+        }
+    }
+    
+    public function clearProject(Request $request, $projectId)
+    {
+        try {
+            $user = $request->user();
+            
+            Log::info('Clearing project messages', [
+                'user_id' => $user->id,
+                'user_name' => $user->name,
+                'project_id' => $projectId
+            ]);
+            
+            DB::table('messages')
+                ->where('type', 'project-' . $projectId)
+                ->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'All project messages cleared successfully'
+            ]);
+        } catch (Exception $e) {
+            Log::error('Error clearing project messages: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to clear messages'
+            ], 500);
+        }
+    }
+}

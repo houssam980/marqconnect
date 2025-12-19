@@ -1,0 +1,61 @@
+╔══════════════════════════════════════════════════════════╗
+║                                                          ║
+║          🔍 OPEN THESE URLs IN YOUR BROWSER 🔍           ║
+║                                                          ║
+╚══════════════════════════════════════════════════════════╝
+
+TEST 1: Check if Laravel is running
+═══════════════════════════════════════════════════════════
+http://localhost/marqconnect_backend/public/up
+
+Expected: "ok" or blank page = GOOD
+Error page = BAD (WAMP not working)
+
+═══════════════════════════════════════════════════════════
+
+TEST 2: Check if debug endpoint works  
+═══════════════════════════════════════════════════════════
+http://localhost/marqconnect_backend/public/debug.php
+
+Expected: JSON with "status": "ok"
+Error = BAD (PHP not working)
+
+═══════════════════════════════════════════════════════════
+
+TEST 3: Check your frontend
+═══════════════════════════════════════════════════════════
+http://localhost:5173
+
+Then:
+1. Login
+2. Open Developer Tools (F12)
+3. Go to "Console" tab
+4. Click "Espace" in sidebar
+5. LOOK FOR RED ERRORS!
+
+Common errors to look for:
+- CORS errors
+- 500 Internal Server Error
+- Failed to fetch
+- Network errors
+
+═══════════════════════════════════════════════════════════
+
+📋 WHAT TO DO:
+
+1. Open ALL 3 URLs above
+2. Screenshot any errors you see
+3. Check browser console (F12)
+4. Tell me EXACTLY what error messages you see
+
+═══════════════════════════════════════════════════════════
+
+🆘 If test 1 or 2 fails:
+   - Check WAMP icon is GREEN
+   - Restart WAMP
+   - Try URLs again
+
+═══════════════════════════════════════════════════════════
+
+
+

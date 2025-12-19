@@ -1,0 +1,19 @@
+# ============================================
+# CREATE .env FILE IN PROJECT ROOT
+# ============================================
+# Location: C:\Users\surface\Desktop\MarqConnect\.env
+# 
+# Copy and paste this content into a new .env file:
+# ============================================
+
+VITE_PUSHER_APP_KEY=d0db7eef206dad3d35ba
+VITE_PUSHER_CLUSTER=eu
+VITE_PUSHER_AUTH_ENDPOINT=http://localhost/marqconnect_backend/public/broadcasting/auth
+VITE_API_BASE_URL=http://localhost/marqconnect_backend/public
+
+# ============================================
+# After creating this file, restart your dev server:
+# npm run dev
+# ============================================
+
+

@@ -1,0 +1,43 @@
+========================================
+MARQCONNECT BACKEND - ENV CONFIGURATION
+========================================
+
+Add these lines to your .env file:
+
+# Broadcasting / WebSocket Configuration
+BROADCAST_CONNECTION=reverb
+
+# Reverb Configuration
+REVERB_APP_ID=1
+REVERB_APP_KEY=marqconnect
+REVERB_APP_SECRET=marqconnect-secret
+REVERB_HOST=localhost
+REVERB_PORT=8080
+REVERB_SCHEME=http
+
+REVERB_SERVER_HOST=0.0.0.0
+REVERB_SERVER_PORT=8080
+
+# Vite Configuration (for broadcasting)
+VITE_REVERB_APP_KEY="${REVERB_APP_KEY}"
+VITE_REVERB_HOST="${REVERB_HOST}"
+VITE_REVERB_PORT="${REVERB_PORT}"
+VITE_REVERB_SCHEME="${REVERB_SCHEME}"
+
+========================================
+TO START THE WEBSOCKET SERVER:
+========================================
+
+Option 1: Run the batch file
+   > start-reverb.bat
+
+Option 2: Run manually
+   > C:\wamp64\bin\php\php8.3.28\php.exe artisan reverb:start
+
+The WebSocket server will start on:
+   ws://localhost:8080
+
+========================================
+
+
+

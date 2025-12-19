@@ -1,0 +1,90 @@
+╔══════════════════════════════════════════════════════════╗
+║                                                          ║
+║     ❓ I NEED YOU TO TELL ME WHAT YOU SEE ❓              ║
+║                                                          ║
+╚══════════════════════════════════════════════════════════╝
+
+Right now I can't see your screen or console, so I need you to:
+
+═══════════════════════════════════════════════════════════
+
+🔍 TEST 1: Open this URL in your browser:
+
+http://localhost/marqconnect_backend/public/debug.php
+
+WHAT DO YOU SEE?
+a) JSON with "status": "ok" ✅
+b) An error page ❌
+c) Nothing / can't connect ❌
+
+═══════════════════════════════════════════════════════════
+
+🔍 TEST 2: Check your browser console:
+
+1. Go to: http://localhost:5173
+2. Press F12 key
+3. Click "Console" tab
+4. Login to your account
+5. Click "Espace" in the sidebar
+
+WHAT ERRORS DO YOU SEE IN RED?
+- Copy the error messages
+- Tell me what they say
+
+═══════════════════════════════════════════════════════════
+
+🔍 TEST 3: What's on your screen?
+
+When you click "Espace", do you see:
+
+[ ] "Loading tasks..." spinner
+[ ] "Task Board" heading
+[ ] Three columns (To Do, In Progress, Done)
+[ ] An input box to add tasks
+[ ] Completely blank / white screen
+[ ] Error message
+[ ] Something else
+
+═══════════════════════════════════════════════════════════
+
+🔍 TEST 4: Is WAMP running?
+
+Look at system tray (bottom-right corner):
+- Is the WAMP icon GREEN? ✅
+- Is it ORANGE/RED? ❌
+
+═══════════════════════════════════════════════════════════
+
+📋 TELL ME:
+
+1. What you see at debug.php
+2. What errors are in console (F12)
+3. What's on screen when you click "Espace"
+4. WAMP icon color
+
+Once you tell me these 4 things, I can fix it immediately!
+
+═══════════════════════════════════════════════════════════
+
+💡 MEANWHILE, TRY THIS:
+
+1. Restart WAMP (right-click icon → Restart All Services)
+2. Wait for it to turn GREEN
+3. Close browser completely
+4. Open browser again
+5. Go to http://localhost:5173
+6. Press Ctrl + Shift + R (hard refresh)
+7. Login
+8. Click "Espace"
+9. Does it work now?
+
+═══════════════════════════════════════════════════════════
+
+🆘 Read these files for more help:
+- DEBUG_STEPS_DO_THESE_NOW.md
+- CHECK_THIS_IN_BROWSER.txt
+
+═══════════════════════════════════════════════════════════
+
+
+

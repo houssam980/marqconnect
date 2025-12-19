@@ -1,0 +1,23 @@
+# ============================================
+# RUN THIS SCRIPT TO FIX THE 404 ERROR
+# ============================================
+
+# Option 1: Run the PowerShell script
+.\add-broadcasting-route.ps1
+
+# Option 2: Manual fix (if script doesn't work)
+# Open: C:\wamp64\www\marqconnect_backend\routes\api.php
+# Add this line after the "use" statements:
+# Broadcast::routes(['middleware' => ['api', 'auth:sanctum']]);
+
+# Then run:
+cd C:\wamp64\www\marqconnect_backend
+php artisan route:clear
+php artisan config:clear
+
+# Verify:
+php artisan route:list | findstr broadcasting
+
+# ============================================
+
+

@@ -1,0 +1,51 @@
+# ============================================
+# COPY THIS TO LARAVEL - EXACT INSTRUCTIONS
+# ============================================
+
+# Step 1: Open this file:
+C:\wamp64\www\marqconnect_backend\routes\api.php
+
+# Step 2: Add this line (after the "use" statements):
+Broadcast::routes(['middleware' => ['api', 'auth:sanctum']]);
+
+# Step 3: Your routes/api.php should look like this:
+# ============================================
+# <?php
+# 
+# use Illuminate\Http\Request;
+# use Illuminate\Support\Facades\Route;
+# use Illuminate\Support\Facades\Broadcast;  # ← Add this use statement
+# 
+# # Add this line:
+# Broadcast::routes(['middleware' => ['api', 'auth:sanctum']]);
+# 
+# Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+#     return $request->user();
+# });
+# 
+# # ... rest of your routes
+# ============================================
+
+# Step 4: Clear Laravel cache:
+cd C:\wamp64\www\marqconnect_backend
+php artisan route:clear
+php artisan config:clear
+php artisan cache:clear
+
+# Step 5: Verify route exists:
+php artisan route:list | findstr broadcasting
+
+# Should show:
+# POST   api/broadcasting/auth  ...  Laravel\Broadcasting\BroadcastController@authenticate
+
+# Step 6: If route shows "api/broadcasting/auth" (with api prefix):
+# Update frontend .env:
+VITE_PUSHER_AUTH_ENDPOINT=/api/broadcasting/auth
+
+# Step 7: Restart frontend dev server
+
+# ============================================
+# After this, 404 will be gone!
+# ============================================
+
+

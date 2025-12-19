@@ -1,0 +1,33 @@
+# ============================================
+# QUICK FIX - DO THIS NOW
+# ============================================
+
+# Step 1: Open this file:
+C:\wamp64\www\marqconnect_backend\routes\api.php
+
+# Step 2: Add this line (after the use statements):
+Broadcast::routes(['middleware' => ['api', 'auth:sanctum']]);
+
+# Step 3: Run these commands:
+cd C:\wamp64\www\marqconnect_backend
+php artisan config:clear
+php artisan route:clear
+php artisan cache:clear
+
+# Step 4: Verify route exists:
+php artisan route:list | findstr broadcasting
+
+# Should show:
+# POST   api/broadcasting/auth  ...
+
+# Step 5: If route shows "api/broadcasting/auth", update frontend:
+# File: src/config/pusher.config.ts
+# Change: authEndpoint: '/api/broadcasting/auth'
+
+# Step 6: Restart frontend dev server
+
+# ============================================
+# That's it! 404 will be gone!
+# ============================================
+
+

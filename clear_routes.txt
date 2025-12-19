@@ -1,0 +1,5 @@
+    
+    // Clear messages endpoints
+    Route::delete('/messages/general/clear', [App\Http\Controllers\MessageController::class, 'clearGeneral']);
+    Route::delete('/messages/project-{projectId}/clear', [App\Http\Controllers\MessageController::class, 'clearProject']);
+});
