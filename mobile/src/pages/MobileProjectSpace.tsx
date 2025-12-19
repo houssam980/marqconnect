@@ -30,6 +30,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { getApiUrl } from '@/config/api.config';
 import { requestStoragePermission } from '@/utils/permissions';
 import { cn } from '@/lib/utils';
+import MobileBoarding from '@/components/MobileBoarding';
 
 interface Project {
   id: number;
@@ -79,7 +80,7 @@ export default function MobileProjectSpace() {
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
-  const [activeTab, setActiveTab] = useState<'chat' | 'files' | 'members'>('chat');
+  const [activeTab, setActiveTab] = useState<'chat' | 'files' | 'members' | 'boarding'>('chat');
   
   // Project management states
   const [showAddSheet, setShowAddSheet] = useState(false);
@@ -723,8 +724,8 @@ export default function MobileProjectSpace() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 mt-3">
-          {(['chat', 'files', 'members'] as const).map((tab) => (
+        <div className="flex gap-1 mt-3 overflow-x-auto hide-scrollbar">
+          {(['chat', 'boarding', 'files', 'members'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => {
@@ -739,6 +740,7 @@ export default function MobileProjectSpace() {
               )}
             >
               {tab === 'chat' && <MessageSquare className="w-4 h-4 inline mr-1" />}
+              {tab === 'boarding' && <Folder className="w-4 h-4 inline mr-1" />}
               {tab === 'files' && <FileText className="w-4 h-4 inline mr-1" />}
               {tab === 'members' && <Users className="w-4 h-4 inline mr-1" />}
               {tab}
@@ -953,6 +955,13 @@ export default function MobileProjectSpace() {
               </div>
             )}
           </div>
+        )}
+
+        {activeTab === 'boarding' && selectedProject && (
+          <MobileBoarding 
+            projectId={selectedProject.id} 
+            projectMembers={selectedProject.members || []} 
+          />
         )}
       </div>
 
