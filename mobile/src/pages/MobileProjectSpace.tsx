@@ -371,6 +371,8 @@ export default function MobileProjectSpace() {
     formData.append('project_id', selectedProject.id.toString());
 
     try {
+      console.log('📤 Uploading file:', selectedFile.name, 'to project:', selectedProject.id);
+      
       const response = await fetch(getApiUrl('/documents'), {
         method: 'POST',
         headers: {
@@ -379,14 +381,31 @@ export default function MobileProjectSpace() {
         body: formData,
       });
 
+      const data = await response.json();
+      console.log('📥 Upload response:', response.status, data);
+
       if (response.ok) {
         setSelectedFile(null);
         fetchDocuments();
-        toast({ title: 'File uploaded successfully' });
+        toast({ title: 'File uploaded successfully', description: selectedFile.name });
+      } else {
+        // Show specific error from server
+        const errorMsg = data.message || data.error || 'Upload failed';
+        const details = data.errors ? Object.values(data.errors).flat().join(', ') : '';
+        console.error('❌ Upload error:', errorMsg, details);
+        toast({ 
+          title: 'Upload failed', 
+          description: details || errorMsg,
+          variant: 'destructive' 
+        });
       }
-    } catch (error) {
-      console.error('Failed to upload file:', error);
-      toast({ title: 'Failed to upload file', variant: 'destructive' });
+    } catch (error: any) {
+      console.error('❌ Upload exception:', error);
+      toast({ 
+        title: 'Upload failed', 
+        description: error.message || 'Network error. Please check your connection.',
+        variant: 'destructive' 
+      });
     } finally {
       setIsUploading(false);
       setUploadProgress(0);

@@ -30,12 +30,24 @@ export default function MobileAuth() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+    
+    // Keep current values before processing
+    const emailValue = email.trim();
+    const passwordValue = password.trim();
+    
+    if (!emailValue || !passwordValue) {
+      setError('Email and password are required');
+      return;
+    }
+    
     setIsLoading(true);
     setError(null);
 
     try {
       const loginUrl = getApiUrl('/login');
       console.log('🌐 Login URL:', loginUrl);
+      console.log('📧 Email:', emailValue);
       
       const response = await fetch(loginUrl, {
         method: 'POST',
@@ -43,10 +55,11 @@ export default function MobileAuth() {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email: emailValue, password: passwordValue })
       });
 
       const data = await response.json();
+      console.log('📥 Response:', response.status, data);
 
       if (!response.ok) {
         if (response.status === 422 && data.errors) {
@@ -68,7 +81,8 @@ export default function MobileAuth() {
 
     } catch (err: any) {
       console.error('❌ Login error:', err.message);
-      setError(err.message);
+      setError(err.message || 'Failed to login. Please try again.');
+      // Don't clear form on error
     } finally {
       setIsLoading(false);
     }
