@@ -35,7 +35,7 @@ jobs:
 
     - name: Install dependencies
       working-directory: mobile
-      run: npm ci
+      run: npm install
 
     - name: Build web app
       working-directory: mobile
@@ -44,8 +44,8 @@ jobs:
     - name: Add Android platform
       working-directory: mobile
       run: |
-        npx cap add android || echo "Android platform already exists"
-        npx cap sync android
+        npm run cap:add:android || echo "Android platform already exists"
+        npm run cap:sync
 
     - name: Add storage permissions to AndroidManifest.xml
       working-directory: mobile
