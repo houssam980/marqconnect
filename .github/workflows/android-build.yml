@@ -1,0 +1,103 @@
+name: Android Build
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'mobile/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: mobile/package-lock.json
+
+    - name: Setup Java JDK
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Install dependencies
+      working-directory: mobile
+      run: npm ci
+
+    - name: Build web app
+      working-directory: mobile
+      run: npm run build
+
+    - name: Add Android platform
+      working-directory: mobile
+      run: |
+        npx cap add android || echo "Android platform already exists"
+        npx cap sync android
+
+    - name: Add storage permissions to AndroidManifest.xml
+      working-directory: mobile
+      run: |
+        MANIFEST_PATH="android/app/src/main/AndroidManifest.xml"
+        
+        if grep -q "READ_EXTERNAL_STORAGE" "$MANIFEST_PATH"; then
+          echo "Permissions already exist"
+        else
+          # Add permissions before <application> tag
+          sed -i '/<application/i\    <!-- Storage Permissions for File Uploads -->\n    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />\n    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="32" />\n    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />\n    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />\n    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />\n' "$MANIFEST_PATH"
+          echo "Storage permissions added"
+        fi
+
+    - name: Grant execute permission for gradlew
+      working-directory: mobile/android
+      run: chmod +x gradlew
+
+    - name: Build Debug APK
+      working-directory: mobile/android
+      run: ./gradlew assembleDebug
+
+    - name: Upload Debug APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: marqenconnect-debug-apk
+        path: mobile/android/app/build/outputs/apk/debug/app-debug.apk
+        retention-days: 30
+
+    - name: Build Release APK (if keystore exists)
+      working-directory: mobile/android
+      continue-on-error: true
+      env:
+        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+      run: |
+        if [ -f "../keystore.jks" ]; then
+          ./gradlew assembleRelease \
+            -Pandroid.injected.signing.store.file=../keystore.jks \
+            -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD \
+            -Pandroid.injected.signing.key.alias=$KEY_ALIAS \
+            -Pandroid.injected.signing.key.password=$KEY_PASSWORD
+        else
+          echo "No keystore found, skipping release build"
+        fi
+
+    - name: Upload Release APK
+      uses: actions/upload-artifact@v4
+      if: success()
+      continue-on-error: true
+      with:
+        name: marqenconnect-release-apk
+        path: mobile/android/app/build/outputs/apk/release/app-release.apk
+        retention-days: 90
