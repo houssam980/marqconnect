@@ -1,26 +1,18 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Folder, 
   Plus, 
   MessageSquare, 
-  FileText, 
   Users, 
   ChevronRight,
   ArrowLeft,
   Send,
   Loader2,
-  Image as ImageIcon,
   MoreVertical,
   X,
   Edit2,
   Trash2,
-  UserPlus,
-  Download,
-  Upload,
-  Paperclip,
-  Link as LinkIcon,
-  ExternalLink
+  UserPlus
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,9 +20,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/lib/auth-context';
 import { useToast } from '@/components/ui/use-toast';
 import { getApiUrl } from '@/config/api.config';
-import { requestStoragePermission } from '@/utils/permissions';
 import { cn } from '@/lib/utils';
-import MobileBoarding from '@/components/MobileBoarding';
 
 interface Project {
   id: number;
@@ -47,24 +37,6 @@ interface Message {
   user_id: number;
   content: string;
   created_at: string;
-  document?: {
-    id: number;
-    name: string;
-    file_type: string;
-    file_size: number;
-    url: string;
-  };
-}
-
-interface Document {
-  id: number;
-  name: string;
-  file_path: string;
-  file_type: string | null;
-  file_size: number | null;
-  uploaded_by: number;
-  url?: string;
-  is_link?: boolean;
 }
 
 interface UserData {
@@ -80,7 +52,7 @@ export default function MobileProjectSpace() {
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
-  const [activeTab, setActiveTab] = useState<'chat' | 'files' | 'members' | 'boarding'>('chat');
+  const [activeTab, setActiveTab] = useState<'chat' | 'members'>('chat');
   
   // Project management states
   const [showAddSheet, setShowAddSheet] = useState(false);
@@ -97,18 +69,6 @@ export default function MobileProjectSpace() {
   const [isCreating, setIsCreating] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  
-  // File upload states
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [isUploading, setIsUploading] = useState(false);
-  
-  // Link states
-  const [showAddLinkSheet, setShowAddLinkSheet] = useState(false);
-  const [newLinkName, setNewLinkName] = useState('');
-  const [newLinkUrl, setNewLinkUrl] = useState('');
-  const [isAddingLink, setIsAddingLink] = useState(false);
   
   // Members states
   const [allUsers, setAllUsers] = useState<UserData[]>([]);
@@ -169,26 +129,6 @@ export default function MobileProjectSpace() {
     }
   }, [token, selectedProject]);
 
-  const fetchDocuments = useCallback(async () => {
-    if (!token || !selectedProject) return;
-    
-    try {
-      const response = await fetch(getApiUrl(`/projects/${selectedProject.id}/documents`), {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setDocuments(data || []);
-      }
-    } catch (error) {
-      console.error('Failed to fetch documents:', error);
-    }
-  }, [token, selectedProject]);
-
   const fetchAllUsers = useCallback(async () => {
     if (!token || user?.role !== 'admin') return;
     
@@ -217,13 +157,10 @@ export default function MobileProjectSpace() {
   useEffect(() => {
     if (selectedProject) {
       fetchMessages();
-      if (activeTab === 'files') {
-        fetchDocuments();
-      }
       const interval = setInterval(fetchMessages, 3000);
       return () => clearInterval(interval);
     }
-  }, [selectedProject, fetchMessages, fetchDocuments, activeTab]);
+  }, [selectedProject, fetchMessages]);
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || isSending || !selectedProject) return;
@@ -349,108 +286,6 @@ export default function MobileProjectSpace() {
     }
   };
 
-  const handleFilePickerClick = async () => {
-    const hasPermission = await requestStoragePermission();
-    if (!hasPermission) {
-      toast({ 
-        title: 'Permission Required', 
-        description: 'Storage permission is needed to upload files',
-        variant: 'destructive' 
-      });
-      return;
-    }
-    // Trigger the hidden file input
-    document.getElementById('file-upload')?.click();
-  };
-
-  const handleFileUpload = async () => {
-    if (!selectedFile || isUploading || !selectedProject) return;
-
-    setIsUploading(true);
-    const formData = new FormData();
-    formData.append('file', selectedFile);
-
-    try {
-      console.log('📤 Uploading file:', selectedFile.name, 'to project:', selectedProject.id);
-      
-      const response = await fetch(getApiUrl(`/projects/${selectedProject.id}/documents`), {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        body: formData,
-      });
-
-      const data = await response.json();
-      console.log('📥 Upload response:', response.status, data);
-
-      if (response.ok) {
-        setSelectedFile(null);
-        fetchDocuments();
-        toast({ title: 'File uploaded successfully', description: selectedFile.name });
-      } else {
-        // Show specific error from server
-        const errorMsg = data.message || data.error || 'Upload failed';
-        const details = data.errors ? Object.values(data.errors).flat().join(', ') : '';
-        console.error('❌ Upload error:', errorMsg, details);
-        toast({ 
-          title: 'Upload failed', 
-          description: details || errorMsg,
-          variant: 'destructive' 
-        });
-      }
-    } catch (error: any) {
-      console.error('❌ Upload exception:', error);
-      toast({ 
-        title: 'Upload failed', 
-        description: error.message || 'Network error. Please check your connection.',
-        variant: 'destructive' 
-      });
-    } finally {
-      setIsUploading(false);
-      setUploadProgress(0);
-    }
-  };
-
-  const handleAddLink = async () => {
-    if (!newLinkName.trim() || !newLinkUrl.trim() || isAddingLink || !selectedProject) return;
-    
-    setIsAddingLink(true);
-    try {
-      // Add link as a document with special marker
-      const linkData = {
-        project_id: selectedProject.id,
-        name: newLinkName,
-        file_path: newLinkUrl,
-        file_type: 'link',
-        file_size: 0
-      };
-
-      const response = await fetch(getApiUrl(`/projects/${selectedProject.id}/documents`), {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify(linkData),
-      });
-
-      if (response.ok) {
-        setNewLinkName('');
-        setNewLinkUrl('');
-        setShowAddLinkSheet(false);
-        fetchDocuments();
-        toast({ title: 'Link added successfully' });
-      }
-    } catch (error) {
-      console.error('Failed to add link:', error);
-      toast({ title: 'Failed to add link', variant: 'destructive' });
-    } finally {
-      setIsAddingLink(false);
-    }
-  };
-
   const handleInviteMembers = async () => {
     if (selectedMembers.length === 0 || isInviting || !selectedProject) return;
     
@@ -490,12 +325,6 @@ export default function MobileProjectSpace() {
       .substring(0, 2);
   };
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-  };
-
   // Project List View
   if (!selectedProject) {
     return (
@@ -512,7 +341,7 @@ export default function MobileProjectSpace() {
             </div>
           ) : projects.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-              <Folder className="w-12 h-12 mb-3 opacity-30" />
+              <MessageSquare className="w-12 h-12 mb-3 opacity-30" />
               <p className="text-sm">No projects yet</p>
             </div>
           ) : (
@@ -528,7 +357,7 @@ export default function MobileProjectSpace() {
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center">
-                      <Folder className="w-6 h-6 text-primary" />
+                      <MessageSquare className="w-6 h-6 text-primary" />
                     </div>
 
                     <div className="flex-1 min-w-0">
@@ -725,13 +554,10 @@ export default function MobileProjectSpace() {
 
         {/* Tabs */}
         <div className="flex gap-1 mt-3 overflow-x-auto hide-scrollbar">
-          {(['chat', 'boarding', 'files', 'members'] as const).map((tab) => (
+          {(['chat', 'members'] as const).map((tab) => (
             <button
               key={tab}
-              onClick={() => {
-                setActiveTab(tab);
-                if (tab === 'files') fetchDocuments();
-              }}
+              onClick={() => setActiveTab(tab)}
               className={cn(
                 'flex-1 py-2 text-sm font-medium rounded-lg transition-colors capitalize',
                 activeTab === tab
@@ -740,8 +566,6 @@ export default function MobileProjectSpace() {
               )}
             >
               {tab === 'chat' && <MessageSquare className="w-4 h-4 inline mr-1" />}
-              {tab === 'boarding' && <Folder className="w-4 h-4 inline mr-1" />}
-              {tab === 'files' && <FileText className="w-4 h-4 inline mr-1" />}
               {tab === 'members' && <Users className="w-4 h-4 inline mr-1" />}
               {tab}
             </button>
@@ -778,14 +602,7 @@ export default function MobileProjectSpace() {
                                 : 'bg-secondary text-foreground rounded-bl-md'
                             )}
                           >
-                            {msg.document ? (
-                              <div className="flex items-center gap-2">
-                                <Paperclip className="w-4 h-4" />
-                                <span className="text-sm">{msg.document.name}</span>
-                              </div>
-                            ) : (
-                              <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
-                            )}
+                            <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
                           </div>
                           <div className="text-[10px] text-muted-foreground mt-1">
                             {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -819,100 +636,6 @@ export default function MobileProjectSpace() {
                 </button>
               </div>
             </div>
-          </div>
-        )}
-
-        {activeTab === 'files' && (
-          <div className="flex flex-col h-full">
-            <div className="flex-1 overflow-y-auto px-4 py-4 hide-scrollbar">
-              {documents.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-                  <FileText className="w-12 h-12 mb-3 opacity-30" />
-                  <p className="text-sm">No files or links yet</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {documents.map((doc) => {
-                    const isLink = doc.file_type === 'link' || doc.file_path?.startsWith('http');
-                    return (
-                      <div key={doc.id} className="mobile-card p-3 flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
-                          {isLink ? (
-                            <LinkIcon className="w-5 h-5 text-primary" />
-                          ) : (
-                            <FileText className="w-5 h-5 text-primary" />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{doc.name}</p>
-                          {!isLink && doc.file_size && (
-                            <p className="text-xs text-muted-foreground">
-                              {formatFileSize(doc.file_size)}
-                            </p>
-                          )}
-                          {isLink && (
-                            <p className="text-xs text-muted-foreground truncate">
-                              {doc.file_path}
-                            </p>
-                          )}
-                        </div>
-                        {isLink ? (
-                          <a
-                            href={doc.file_path}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="p-2 rounded-full hover:bg-secondary/50"
-                          >
-                            <ExternalLink className="w-4 h-4" />
-                          </a>
-                        ) : (
-                          <a
-                            href={doc.url}
-                            download
-                            className="p-2 rounded-full hover:bg-secondary/50"
-                          >
-                            <Download className="w-4 h-4" />
-                          </a>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {user?.role === 'admin' && (
-              <div className="px-4 py-3 border-t border-border/30 bg-background/50 backdrop-blur-sm shrink-0 space-y-2">
-                <div className="flex gap-2">
-                  <input
-                    type="file"
-                    id="file-upload"
-                    onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                    className="hidden"
-                  />
-                  <button
-                    onClick={handleFilePickerClick}
-                    className="flex-1 px-4 py-2.5 bg-secondary rounded-xl text-sm text-center cursor-pointer active:scale-95 transition-transform"
-                  >
-                    {selectedFile ? selectedFile.name : 'Choose File'}
-                  </button>
-                  <button
-                    onClick={handleFileUpload}
-                    disabled={!selectedFile || isUploading}
-                    className="px-6 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium disabled:opacity-50 active:scale-95 transition-transform"
-                  >
-                    {isUploading ? 'Uploading...' : 'Upload'}
-                  </button>
-                </div>
-                <button
-                  onClick={() => setShowAddLinkSheet(true)}
-                  className="w-full px-4 py-2.5 bg-secondary rounded-xl text-sm font-medium flex items-center justify-center gap-2 active:scale-95 transition-transform"
-                >
-                  <LinkIcon className="w-4 h-4" />
-                  Add Link
-                </button>
-              </div>
-            )}
           </div>
         )}
 
@@ -955,13 +678,6 @@ export default function MobileProjectSpace() {
               </div>
             )}
           </div>
-        )}
-
-        {activeTab === 'boarding' && selectedProject && (
-          <MobileBoarding 
-            projectId={selectedProject.id} 
-            projectMembers={selectedProject.members || []} 
-          />
         )}
       </div>
 
@@ -1117,76 +833,6 @@ export default function MobileProjectSpace() {
                   className="w-full py-3.5 bg-[#E1F700] text-black font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] transition-transform"
                 >
                   {isInviting ? 'Inviting...' : `Invite ${selectedMembers.length} Member${selectedMembers.length !== 1 ? 's' : ''}`}
-                </button>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* Add Link Sheet */}
-      <AnimatePresence>
-        {showAddLinkSheet && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 z-50"
-              onClick={() => setShowAddLinkSheet(false)}
-            />
-            <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="fixed left-0 right-0 bg-[#1a1a1a] rounded-t-3xl z-50"
-              style={{ bottom: '80px', maxHeight: '50vh' }}
-            >
-              <div className="flex justify-center pt-3 pb-2">
-                <div className="w-10 h-1 bg-white/20 rounded-full" />
-              </div>
-
-              <div className="px-4 pb-3 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-white">Add Link</h2>
-                <button
-                  onClick={() => setShowAddLinkSheet(false)}
-                  className="p-2 rounded-full hover:bg-white/10"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="px-4 space-y-3">
-                <div>
-                  <label className="text-sm text-white/70 mb-1 block">Link Name</label>
-                  <Input
-                    value={newLinkName}
-                    onChange={(e) => setNewLinkName(e.target.value)}
-                    placeholder="Enter link name..."
-                    className="bg-white/5 border-white/10"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm text-white/70 mb-1 block">URL</label>
-                  <Input
-                    value={newLinkUrl}
-                    onChange={(e) => setNewLinkUrl(e.target.value)}
-                    placeholder="https://example.com"
-                    type="url"
-                    className="bg-white/5 border-white/10"
-                  />
-                </div>
-              </div>
-
-              <div className="p-4 mt-2">
-                <button
-                  onClick={handleAddLink}
-                  disabled={!newLinkName.trim() || !newLinkUrl.trim() || isAddingLink}
-                  className="w-full py-3.5 bg-[#E1F700] text-black font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] transition-transform"
-                >
-                  {isAddingLink ? 'Adding...' : 'Add Link'}
                 </button>
               </div>
             </motion.div>

@@ -31,6 +31,8 @@ export function NotificationBell({ onNavigate }: NotificationBellProps) {
   const { toast } = useToast();
   const playedNotificationsRef = useRef<Set<number>>(new Set());
   const fetchingRef = useRef(false);
+  const [dragY, setDragY] = useState(0);
+  const dragStartY = useRef(0);
 
   const notifyUser = (notificationId: number) => {
     if (playedNotificationsRef.current.has(notificationId)) return;
@@ -194,6 +196,26 @@ export function NotificationBell({ onNavigate }: NotificationBellProps) {
     }
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    dragStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const currentY = e.touches[0].clientY;
+    const diff = currentY - dragStartY.current;
+    if (diff > 0) {
+      setDragY(diff);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (dragY > 100) {
+      setIsOpen(false);
+    }
+    setDragY(0);
+    dragStartY.current = 0;
+  };
+
   return (
     <>
       <button 
@@ -218,19 +240,22 @@ export function NotificationBell({ onNavigate }: NotificationBellProps) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/80 flex items-center justify-center p-4"
-              style={{ zIndex: 99999 }}
+              className="fixed inset-0 bg-black/60 z-50"
               onClick={() => setIsOpen(false)}
             />
             <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] max-w-md bg-[#1a1a1a] rounded-2xl flex flex-col shadow-2xl border border-white/10"
-              style={{ zIndex: 100000, maxHeight: '80vh' }}
+              initial={{ y: '100%' }}
+              animate={{ y: dragY }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              className="fixed bottom-0 left-0 right-0 bg-[#1a1a1a] rounded-t-3xl flex flex-col shadow-2xl border-t border-white/10 z-50"
+              style={{ maxHeight: '85vh', transform: `translateY(${dragY}px)` }}
+              onClick={(e) => e.stopPropagation()}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
             >
-              <div className="flex items-center justify-between p-4 border-b border-white/10 shrink-0">
+              <div className="flex items-center justify-between px-4 py-4 border-b border-white/10 shrink-0">
                 <h3 className="font-semibold text-lg">Notifications</h3>
                 <div className="flex gap-2">
                   {unreadCount > 0 && (
@@ -245,7 +270,7 @@ export function NotificationBell({ onNavigate }: NotificationBellProps) {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto overscroll-contain min-h-0">
+              <div className="flex-1 overflow-y-auto overscroll-contain">
                 {isLoading ? (
                   <div className="flex items-center justify-center py-12">
                     <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -253,14 +278,14 @@ export function NotificationBell({ onNavigate }: NotificationBellProps) {
                 ) : notifications.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                     <Bell className="w-12 h-12 mb-2 opacity-20" />
-                    <p className="text-sm">No notifications</p>
+                    <p className="text-sm">No notifications yet</p>
                   </div>
                 ) : (
                   <div className="divide-y divide-white/5">
                     {notifications.map((notification) => (
                       <div
                         key={notification.id}
-                        className={cn("p-4 active:bg-white/10 transition-colors", !notification.read && "bg-primary/10")}
+                        className={cn("p-4 active:bg-white/5 transition-colors", !notification.read && "bg-primary/5 border-l-4 border-l-primary")}
                         onClick={() => handleNotificationClick(notification)}
                       >
                         <div className="flex items-start gap-3">
@@ -271,7 +296,7 @@ export function NotificationBell({ onNavigate }: NotificationBellProps) {
                                 <p className={cn("font-medium text-sm", !notification.read && "font-semibold")}>
                                   {notification.title}
                                 </p>
-                                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{notification.message}</p>
+                                <p className="text-xs text-muted-foreground mt-1">{notification.message}</p>
                                 <p className="text-xs text-muted-foreground/60 mt-1">
                                   {new Date(notification.created_at).toLocaleString()}
                                 </p>
@@ -299,6 +324,11 @@ export function NotificationBell({ onNavigate }: NotificationBellProps) {
                     ))}
                   </div>
                 )}
+              </div>
+
+              {/* Drag handle at bottom */}
+              <div className="flex justify-center py-2 border-t border-white/10">
+                <div className="w-12 h-1 bg-white/30 rounded-full" />
               </div>
             </motion.div>
           </>
