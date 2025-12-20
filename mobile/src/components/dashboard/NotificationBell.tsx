@@ -23,16 +23,11 @@ interface Notification {
 }
 
 export function NotificationBell({ onNavigate }: NotificationBellProps) {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const { token, user } = useAuth();
   const { toast } = useToast();
   const playedNotificationsRef = useRef<Set<number>>(new Set());
   const fetchingRef = useRef(false);
-  const [dragY, setDragY] = useState(0);
-  const dragStartY = useRef(0);
 
   const notifyUser = (notificationId: number) => {
     if (playedNotificationsRef.current.has(notificationId)) return;
@@ -74,30 +69,6 @@ export function NotificationBell({ onNavigate }: NotificationBellProps) {
     };
   }, [token, user]);
 
-  const fetchNotifications = async () => {
-    if (fetchingRef.current || !token) return;
-    
-    fetchingRef.current = true;
-    setIsLoading(true);
-    
-    try {
-      const response = await fetch(getApiUrl('/notifications'), {
-        headers: { "Authorization": `Bearer ${token}`, "Accept": "application/json" },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setNotifications(data || []);
-        setUnreadCount(data?.filter((n: Notification) => !n.read).length || 0);
-      }
-    } catch (error) {
-      console.error("Failed to fetch notifications:", error);
-    } finally {
-      setIsLoading(false);
-      fetchingRef.current = false;
-    }
-  };
-
   const fetchUnreadCount = async () => {
     if (fetchingRef.current || !token) return;
     
@@ -113,117 +84,11 @@ export function NotificationBell({ onNavigate }: NotificationBellProps) {
     } catch (error) {}
   };
 
-  const markAsRead = async (id: number) => {
-    try {
-      const response = await fetch(getApiUrl(`/notifications/${id}/read`), {
-        method: "PUT",
-        headers: { "Authorization": `Bearer ${token}`, "Accept": "application/json" },
-      });
-
-      if (response.ok) {
-        setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-        setUnreadCount(prev => Math.max(0, prev - 1));
-      }
-    } catch (error) {}
-  };
-
-  const markAllAsRead = async () => {
-    try {
-      const response = await fetch(getApiUrl("/notifications/read-all"), {
-        method: "PUT",
-        headers: { "Authorization": `Bearer ${token}`, "Accept": "application/json" },
-      });
-
-      if (response.ok) {
-        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-        setUnreadCount(0);
-      }
-    } catch (error) {}
-  };
-
-  const deleteNotification = async (id: number) => {
-    try {
-      const response = await fetch(getApiUrl(`/notifications/${id}`), {
-        method: "DELETE",
-        headers: { "Authorization": `Bearer ${token}`, "Accept": "application/json" },
-      });
-
-      if (response.ok || response.status === 404) {
-        const notification = notifications.find(n => n.id === id);
-        if (notification && !notification.read) {
-          setUnreadCount(prev => Math.max(0, prev - 1));
-        }
-        setNotifications(prev => prev.filter(n => n.id !== id));
-      }
-    } catch (error) {}
-  };
-
-  const getNotificationIcon = (type: string) => {
-    switch (type) {
-      case 'event': return '📅';
-      case 'task_assigned': return '✅';
-      case 'message': return '💬';
-      case 'project_message': return '📁';
-      default: return '🔔';
-    }
-  };
-
-  const handleNotificationClick = (notification: Notification) => {
-    if (!notification.read) markAsRead(notification.id);
-    
-    let pageId: string | null = null;
-    
-    if (notification.link) {
-      if (notification.link.includes('/events')) pageId = 'events';
-      else if (notification.link.includes('/general')) pageId = 'general';
-      else if (notification.link.includes('/project')) pageId = 'project';
-      else if (notification.link.includes('/home')) pageId = 'home';
-    }
-    
-    if (!pageId) {
-      switch (notification.type) {
-        case 'event': pageId = 'events'; break;
-        case 'task_assigned': pageId = 'home'; break;
-        case 'message': pageId = 'general'; break;
-        case 'project_message': pageId = 'project'; break;
-        default: pageId = 'home';
-      }
-    }
-    
-    if (pageId && onNavigate) {
-      setIsOpen(false);
-      onNavigate(pageId);
-    }
-  };
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    dragStartY.current = e.touches[0].clientY;
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    const currentY = e.touches[0].clientY;
-    const diff = currentY - dragStartY.current;
-    if (diff > 0) {
-      setDragY(diff);
-    }
-  };
-
-  const handleTouchEnd = () => {
-    if (dragY > 100) {
-      setIsOpen(false);
-    }
-    setDragY(0);
-    dragStartY.current = 0;
-  };
-
   return (
     <>
       <button 
         className="w-10 h-10 rounded-full flex items-center justify-center relative active:bg-white/10 transition-colors"
-        onClick={() => {
-          setIsOpen(true);
-          if (notifications.length === 0) fetchNotifications();
-        }}
+        onClick={() => onNavigate?.('notifications')}
       >
         <Bell className="w-5 h-5 text-muted-foreground" />
         {unreadCount > 0 && (
@@ -232,108 +97,6 @@ export function NotificationBell({ onNavigate }: NotificationBellProps) {
           </span>
         )}
       </button>
-
-      <AnimatePresence>
-        {isOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 z-50"
-              onClick={() => setIsOpen(false)}
-            />
-            <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: dragY }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="fixed bottom-0 left-0 right-0 bg-[#1a1a1a] rounded-t-3xl flex flex-col shadow-2xl border-t border-white/10 z-50"
-              style={{ maxHeight: '85vh', transform: `translateY(${dragY}px)` }}
-              onClick={(e) => e.stopPropagation()}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-            >
-              <div className="flex items-center justify-between px-4 py-4 border-b border-white/10 shrink-0">
-                <h3 className="font-semibold text-lg">Notifications</h3>
-                <div className="flex gap-2">
-                  {unreadCount > 0 && (
-                    <button onClick={markAllAsRead} className="text-xs h-8 px-3 rounded-lg bg-white/10 hover:bg-white/20 active:bg-white/30 flex items-center gap-1">
-                      <CheckCheck className="w-4 h-4" />
-                      <span>Mark all</span>
-                    </button>
-                  )}
-                  <button onClick={() => setIsOpen(false)} className="h-8 w-8 rounded-lg bg-white/10 hover:bg-white/20 active:bg-white/30 flex items-center justify-center">
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex-1 overflow-y-auto overscroll-contain">
-                {isLoading ? (
-                  <div className="flex items-center justify-center py-12">
-                    <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                  </div>
-                ) : notifications.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                    <Bell className="w-12 h-12 mb-2 opacity-20" />
-                    <p className="text-sm">No notifications yet</p>
-                  </div>
-                ) : (
-                  <div className="divide-y divide-white/5">
-                    {notifications.map((notification) => (
-                      <div
-                        key={notification.id}
-                        className={cn("p-4 active:bg-white/5 transition-colors", !notification.read && "bg-primary/5 border-l-4 border-l-primary")}
-                        onClick={() => handleNotificationClick(notification)}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className="text-2xl shrink-0">{getNotificationIcon(notification.type)}</div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="flex-1 min-w-0">
-                                <p className={cn("font-medium text-sm", !notification.read && "font-semibold")}>
-                                  {notification.title}
-                                </p>
-                                <p className="text-xs text-muted-foreground mt-1">{notification.message}</p>
-                                <p className="text-xs text-muted-foreground/60 mt-1">
-                                  {new Date(notification.created_at).toLocaleString()}
-                                </p>
-                              </div>
-                              <div className="flex gap-1 shrink-0">
-                                {!notification.read && (
-                                  <button
-                                    className="p-1.5 rounded-full hover:bg-white/10 active:bg-white/20"
-                                    onClick={(e) => { e.stopPropagation(); markAsRead(notification.id); }}
-                                  >
-                                    <Check className="w-3.5 h-3.5" />
-                                  </button>
-                                )}
-                                <button
-                                  className="p-1.5 rounded-full hover:bg-white/10 active:bg-white/20 text-red-400"
-                                  onClick={(e) => { e.stopPropagation(); deleteNotification(notification.id); }}
-                                >
-                                  <X className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Drag handle at bottom */}
-              <div className="flex justify-center py-2 border-t border-white/10">
-                <div className="w-12 h-1 bg-white/30 rounded-full" />
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
     </>
   );
 }

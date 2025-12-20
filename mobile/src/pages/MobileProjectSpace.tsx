@@ -381,12 +381,6 @@ export default function MobileProjectSpace() {
                           {project.description}
                         </p>
                       )}
-                      <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Users className="w-3 h-3" />
-                          {project.members_count || 0}
-                        </span>
-                      </div>
                     </div>
 
                     <ChevronRight className="w-5 h-5 text-muted-foreground" />

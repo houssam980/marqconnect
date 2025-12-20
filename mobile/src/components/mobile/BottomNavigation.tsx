@@ -5,7 +5,8 @@ import {
   MessageSquare, 
   Folder, 
   Calendar, 
-  Users 
+  Users,
+  Bell
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-context';
@@ -20,8 +21,8 @@ const navItems = [
   { id: 'home', icon: LayoutGrid, label: 'Home' },
   { id: 'general', icon: MessageSquare, label: 'Chat' },
   { id: 'project', icon: Folder, label: 'Projects' },
+  { id: 'notifications', icon: Bell, label: 'Alerts' },
   { id: 'events', icon: Calendar, label: 'Events' },
-  { id: 'equipe', icon: Users, label: 'Team', adminOnly: true },
 ];
 
 export default function BottomNavigation({ activePage, onNavigate }: BottomNavigationProps) {

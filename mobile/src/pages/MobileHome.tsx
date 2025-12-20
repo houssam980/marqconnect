@@ -9,6 +9,7 @@ import MobileProjectSpace from './MobileProjectSpace';
 import MobileEvents from './MobileEvents';
 import MobileSettings from './MobileSettings';
 import MobileEquipe from './MobileEquipe';
+import MobileNotifications from './MobileNotifications';
 import { useAuth } from '@/lib/auth-context';
 import { activityTracker } from '@/services/activityTracker';
 
@@ -55,6 +56,8 @@ export default function MobileHome() {
         return <MobileGeneralSpace />;
       case 'project':
         return <MobileProjectSpace />;
+      case 'notifications':
+        return <MobileNotifications onNavigate={handleNavigate} />;
       case 'events':
         return <MobileEvents />;
       case 'equipe':
