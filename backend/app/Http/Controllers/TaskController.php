@@ -56,12 +56,37 @@ class TaskController extends Controller
                     ];
                 });
         } else {
-            // Regular users see only tasks assigned to them
-            $query = $user->assignedTasks()
-                ->with(['user', 'assignedUsers', 'project']);
+            // Regular users see tasks from their projects or assigned to them
+            $query = Task::with(['user', 'assignedUsers', 'project']);
             
             if ($projectId) {
-                $query->where('project_id', $projectId);
+                // Check if user is a member of this project
+                $isMember = \DB::table('project_members')
+                    ->where('project_id', $projectId)
+                    ->where('user_id', $user->id)
+                    ->exists();
+                
+                if ($isMember) {
+                    // Show all tasks in this project
+                    $query->where('project_id', $projectId);
+                } else {
+                    // Not a member, only show assigned tasks
+                    $query->whereHas('assignedUsers', function($q) use ($user) {
+                        $q->where('user_id', $user->id);
+                    })->where('project_id', $projectId);
+                }
+            } else {
+                // No specific project - show tasks from user's projects or assigned to them
+                $userProjectIds = \DB::table('project_members')
+                    ->where('user_id', $user->id)
+                    ->pluck('project_id');
+                
+                $query->where(function($q) use ($user, $userProjectIds) {
+                    $q->whereIn('project_id', $userProjectIds)
+                      ->orWhereHas('assignedUsers', function($subQ) use ($user) {
+                          $subQ->where('user_id', $user->id);
+                      });
+                });
             }
             
             $tasks = $query->orderBy('created_at', 'desc')
