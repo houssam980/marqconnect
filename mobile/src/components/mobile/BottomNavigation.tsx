@@ -26,8 +26,6 @@ const navItems = [
 ];
 
 export default function BottomNavigation({ activePage, onNavigate }: BottomNavigationProps) {
-  const { user } = useAuth();
-
   const handlePress = async (id: string) => {
     try {
       await Haptics.impact({ style: ImpactStyle.Light });
@@ -37,12 +35,10 @@ export default function BottomNavigation({ activePage, onNavigate }: BottomNavig
     onNavigate(id);
   };
 
-  const filteredItems = navItems.filter(item => !item.adminOnly || user?.role === 'admin');
-
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 ios-blur border-t border-border/30">
       <div className="flex items-center justify-around h-16 px-2" style={{ paddingBottom: 'var(--safe-area-bottom)' }}>
-        {filteredItems.map((item) => {
+        {navItems.map((item) => {
           const isActive = activePage === item.id;
           const Icon = item.icon;
 
