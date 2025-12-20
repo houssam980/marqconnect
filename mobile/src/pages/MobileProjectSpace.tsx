@@ -45,6 +45,19 @@ interface UserData {
   email: string;
 }
 
+interface Task {
+  id: number;
+  project_id: number | null;
+  title: string;
+  tag: string;
+  status: string;
+  priority: string;
+  date: string;
+  assignees: any[];
+  assigned_users?: Array<{ id: number; name: string; email: string }>;
+  created_by?: { id: number; name: string };
+}
+
 export default function MobileProjectSpace() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
@@ -52,7 +65,11 @@ export default function MobileProjectSpace() {
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
-  const [activeTab, setActiveTab] = useState<'chat' | 'members'>('chat');
+  const [activeTab, setActiveTab] = useState<'chat' | 'members' | 'tasks'>('chat');
+  
+  // Tasks state
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [isLoadingTasks, setIsLoadingTasks] = useState(false);
   
   // Project management states
   const [showAddSheet, setShowAddSheet] = useState(false);
@@ -149,6 +166,29 @@ export default function MobileProjectSpace() {
     }
   }, [token, user]);
 
+  const fetchTasks = useCallback(async () => {
+    if (!token || !selectedProject) return;
+    
+    setIsLoadingTasks(true);
+    try {
+      const response = await fetch(getApiUrl(`/tasks?project_id=${selectedProject.id}`), {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setTasks(data || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch tasks:', error);
+    } finally {
+      setIsLoadingTasks(false);
+    }
+  }, [token, selectedProject]);
+
   useEffect(() => {
     fetchProjects();
     fetchAllUsers();
@@ -157,10 +197,14 @@ export default function MobileProjectSpace() {
   useEffect(() => {
     if (selectedProject) {
       fetchMessages();
-      const interval = setInterval(fetchMessages, 3000);
+      fetchTasks();
+      const interval = setInterval(() => {
+        fetchMessages();
+        fetchTasks();
+      }, 3000);
       return () => clearInterval(interval);
     }
-  }, [selectedProject, fetchMessages]);
+  }, [selectedProject, fetchMessages, fetchTasks]);
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || isSending || !selectedProject) return;
@@ -547,7 +591,7 @@ export default function MobileProjectSpace() {
 
         {/* Tabs */}
         <div className="flex gap-1 mt-3 overflow-x-auto hide-scrollbar">
-          {(['chat', 'members'] as const).map((tab) => (
+          {(['chat', 'tasks', 'members'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -559,6 +603,7 @@ export default function MobileProjectSpace() {
               )}
             >
               {tab === 'chat' && <MessageSquare className="w-4 h-4 inline mr-1" />}
+              {tab === 'tasks' && '✅ '}
               {tab === 'members' && <Users className="w-4 h-4 inline mr-1" />}
               {tab}
             </button>
@@ -629,6 +674,82 @@ export default function MobileProjectSpace() {
                 </button>
               </div>
             </div>
+          </div>
+        )}
+
+        {activeTab === 'tasks' && (
+          <div className="flex-1 overflow-y-auto px-4 py-4 hide-scrollbar">
+            {isLoadingTasks ? (
+              <div className="flex items-center justify-center h-full">
+                <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : tasks.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+                <div className="text-4xl mb-2">📋</div>
+                <p className="text-sm">No tasks linked to this project</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {tasks.map((task) => (
+                  <div key={task.id} className="mobile-card p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-sm mb-1">{task.title}</h3>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          <span className={cn(
+                            "text-xs px-2 py-1 rounded-full font-medium",
+                            task.status === 'todo' && "bg-gray-500/20 text-gray-400",
+                            task.status === 'in-progress' && "bg-yellow-500/20 text-yellow-400",
+                            task.status === 'done' && "bg-green-500/20 text-green-400"
+                          )}>
+                            {task.status}
+                          </span>
+                          {task.tag && (
+                            <span className="text-xs px-2 py-1 rounded-full bg-primary/20 text-primary">
+                              {task.tag}
+                            </span>
+                          )}
+                          {task.priority && (
+                            <span className={cn(
+                              "text-xs px-2 py-1 rounded-full",
+                              task.priority === 'high' && "bg-red-500/20 text-red-400",
+                              task.priority === 'medium' && "bg-orange-500/20 text-orange-400",
+                              task.priority === 'low' && "bg-blue-500/20 text-blue-400"
+                            )}>
+                              {task.priority}
+                            </span>
+                          )}
+                        </div>
+                        {task.assigned_users && task.assigned_users.length > 0 && (
+                          <div className="flex items-center gap-2 mt-2">
+                            <span className="text-xs text-muted-foreground">Assigned to:</span>
+                            <div className="flex -space-x-2">
+                              {task.assigned_users.slice(0, 3).map((u) => (
+                                <Avatar key={u.id} className="w-6 h-6 border-2 border-background">
+                                  <AvatarFallback className="text-xs bg-primary/20 text-primary">
+                                    {getInitials(u.name)}
+                                  </AvatarFallback>
+                                </Avatar>
+                              ))}
+                              {task.assigned_users.length > 3 && (
+                                <div className="w-6 h-6 rounded-full bg-muted border-2 border-background flex items-center justify-center">
+                                  <span className="text-xs">+{task.assigned_users.length - 3}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        {task.date && (
+                          <p className="text-xs text-muted-foreground mt-2">
+                            Due: {new Date(task.date).toLocaleDateString()}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
