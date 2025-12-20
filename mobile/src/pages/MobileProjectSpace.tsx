@@ -185,7 +185,6 @@ export default function MobileProjectSpace() {
       }
     } catch (error) {
       console.error('Failed to send message:', error);
-      toast({ title: 'Failed to send message', variant: 'destructive' });
     } finally {
       setIsSending(false);
     }

@@ -114,7 +114,6 @@ export default function MobileNotifications({ onNavigate }: MobileNotificationsP
 
       if (response.ok) {
         setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-        toast({ title: "All notifications marked as read" });
       }
     } catch (error) {}
   };
@@ -128,7 +127,6 @@ export default function MobileNotifications({ onNavigate }: MobileNotificationsP
 
       if (response.ok || response.status === 404) {
         setNotifications(prev => prev.filter(n => n.id !== id));
-        toast({ title: "Notification deleted" });
       }
     } catch (error) {}
   };
